@@ -1,0 +1,10 @@
+---
+ansible_ssh_port: 22
+ansible_ssh_user: user
+
+kafka_zookeeper_connection_string: 
+
+zookeeper_leader_port: 2888
+zookeeper_election_port: 3888
+
+zookeeper_servers: "{{ groups['zookeeper_hosts'] }}"

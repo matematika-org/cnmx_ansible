@@ -1,0 +1,78 @@
+---
+- name: Add zookeeper user
+  user:
+    name: "{{ zookeeper_user }}"
+    shell: /sbin/nologin
+  become: yes
+
+- name: Downloading zookeeper distrib
+  get_url:
+    url: https://downloads.apache.org/zookeeper/zookeeper-{{ zookeeper_version }}/apache-zookeeper-{{ zookeeper_version }}-bin.tar.gz
+    dest: /tmp/
+ 
+- name: Unarchive zookeeper distrib
+  unarchive:
+    src: /tmp/apache-zookeeper-{{ zookeeper_version }}-bin.tar.gz
+    dest: /opt/
+    remote_src: yes
+  become: yes
+ 
+- name: Change owner zookeeper folder
+  file:
+    path: /opt/apache-zookeeper-{{ zookeeper_version }}-bin
+    owner: "{{ zookeeper_user }}"
+    group: "{{ zookeeper_user }}"
+    recurse: yes
+  become: yes
+
+- name: Creating work directory
+  file:
+    path: "{{ zookeeper_work_directory}}"
+    owner: "{{ zookeeper_user }}"
+    group: "{{ zookeeper_user }}"
+    state: directory
+    mode: '0740'
+  become: yes
+
+- name: Create symlink to zookeeper folder
+  file:
+    src: /opt/apache-zookeeper-{{ zookeeper_version }}-bin
+    dest: /opt/zookeeper
+    owner: "{{ zookeeper_user }}"
+    group: "{{ zookeeper_user }}"
+    state: link
+  become: yes
+
+- name: Deleteing distrib file
+  file:
+    path: /opt/apache-zookeeper-{{ zookeeper_version }}-bin.tar.gz
+    state: absent
+
+- name: Installing systemd service
+  template:
+    src: templates/zookeeper.service.j2
+    dest: /etc/systemd/system/zookeeper.service
+  become: yes
+
+
+- name: Configuring zookeeper myid
+  template:
+    src: templates/myid.j2
+    dest: "{{ zookeeper_work_directory }}/myid"
+    owner: "{{ zookeeper_user }}"
+    group: "{{ zookeeper_user }}"
+  become: yes
+
+- name: Copying zookeeper config
+  template:
+    src: templates/zoo.cfg.j2
+    dest: /opt/zookeeper/conf/zoo.cfg
+  become: yes
+
+- name: Start service zookerper, if not started
+  systemd:
+    daemon_reload: yes
+    state: started
+    name: zookeeper
+  become: yes
+

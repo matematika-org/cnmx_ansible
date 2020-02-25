@@ -1,0 +1,15 @@
+---
+- hosts: dev
+
+  roles:
+    - common
+
+- hosts: zookeeper_hosts
+
+  roles:
+    - zookeeper
+
+- hosts: kafka_hosts
+
+  roles:
+    - kafka

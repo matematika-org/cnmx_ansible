@@ -1,0 +1,9 @@
+---
+kafka_version: 2.4.0
+scala_version: 2.12
+
+kafka_user: kafka
+kafka_zookeeper_port: 2181
+zookeeper_user: zookeeper
+
+kafka_dir: /kafka

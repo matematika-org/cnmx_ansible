@@ -1,0 +1,69 @@
+---
+- name: Add kafka user
+  user:
+    name: "{{ kafka_user }}"
+    shell: /sbin/nologin
+  become: yes
+
+- name: Downloading kafka distrib
+  get_url:
+    url: https://downloads.apache.org/kafka/{{ kafka_version }}/kafka_{{ scala_version }}-{{ kafka_version }}.tgz
+    dest: /tmp/
+ 
+- name: Unarchive kafka distrib
+  unarchive:
+    src: /tmp/kafka_{{ scala_version }}-{{kafka_version }}.tgz
+    dest: /opt/
+    remote_src: yes
+  become: yes
+ 
+- name: Change owner kafka folder
+  file:
+    path: /opt/kafka_{{ scala_version }}-{{ kafka_version }}
+    owner: "{{ kafka_user }}"
+    group: "{{ kafka_user }}"
+    recurse: yes
+  become: yes
+
+- name: Create symlink to kafka folder
+  file:
+    src: /opt/kafka_{{ scala_version }}-{{ kafka_version }}
+    dest: /opt/kafka
+    owner: "{{ kafka_user }}"
+    group: "{{ kafka_user }}"
+    state: link
+  become: yes
+
+- name: Creating work directory
+  file:
+    path: "{{ kafka_dir }}"
+    owner: "{{ kafka_user }}"
+    group: "{{ kafka_user }}"
+    state: directory
+    mode: '0740'
+  become: yes
+
+- name: Deleteing distrib file
+  file:
+    path: /tmp/kafka_{{ scala_version }}-{{kafka_version }}.tgz
+    state: absent
+
+- name: Konfiguring kafka
+  template:
+    src: templates/server.properties.j2
+    dest: /opt/kafka/config/server.properties
+  become: yes
+
+- name: Installing systemd service
+  template:
+    src: templates/kafka.service.j2
+    dest: /etc/systemd/system/kafka.service
+  become: yes
+
+- name: Start service kafka, if not started
+  systemd:
+    daemon_reload: yes
+    state: started
+    name: kafka
+  become: yes
+

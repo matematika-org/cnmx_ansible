@@ -1,0 +1,5 @@
+---
+zookeeper_version: 3.5.7
+zookeeper_user: zookeeper
+zookeeper_work_directory: /zookeeper
+
